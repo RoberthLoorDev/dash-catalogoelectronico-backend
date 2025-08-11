@@ -68,7 +68,7 @@ export const register = (UsuarioModel: any) => async (req: Request, res: Respons
 
 export const login = (UsuarioModel: any) => async (req: Request, res: Response) => {
      try {
-          const requiredFields = ["email", "password"];
+          const requiredFields = ["username", "password"];
           const missingFields = validateFields(req.body, requiredFields);
           if (missingFields.length > 0) {
                return res.status(400).json({
@@ -78,9 +78,9 @@ export const login = (UsuarioModel: any) => async (req: Request, res: Response) 
                });
           }
 
-          const { email, password } = req.body;
+          const { username, password } = req.body;
 
-          const usuario = await UsuarioModel.findOne({ where: { email } });
+          const usuario = await UsuarioModel.findOne({ where: { username } });
           if (!usuario) {
                return res.status(404).json({ success: false, message: "Usuario no encontrado", data: null });
           }
@@ -90,7 +90,7 @@ export const login = (UsuarioModel: any) => async (req: Request, res: Response) 
                return res.status(401).json({ success: false, message: "Contraseña incorrecta", data: null });
           }
 
-          const token = jwt.sign({ id: usuario.id, email: usuario.email }, JWT_SECRET, {
+          const token = jwt.sign({ id: usuario.id, username: usuario.username }, JWT_SECRET, {
                expiresIn: "1h",
           });
 
