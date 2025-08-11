@@ -9,4 +9,7 @@ export const dbConfig = {
      password: process.env.DB_PASSWORD || "",
      database: process.env.DB_NAME || "dashboard",
      dialect: (process.env.DB_DIALECT as any) || "mysql",
+     webRuc: process.env.WEB_RUC ?? "",
+     webUsuario: process.env.WEB_USUARIO ?? "",
+     webClave: process.env.WEB_CLAVE ?? "",
 };
