@@ -3,6 +3,7 @@ import "dotenv/config";
 import { connectDB } from "./src/db";
 import sequelize from "./src/db";
 import { initModels } from "./src/db/initModels";
+import routes from "./src/routes";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -25,11 +26,10 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 connectDB()
      .then(async () => {
           console.log("🟢 Base de datos conectada correctamente");
-          // Inicializar modelos
-          initModels(sequelize);
-          // Sincronizar tablas
+          const models = initModels(sequelize);
           await sequelize.sync();
           console.log("📦 Tablas sincronizadas correctamente");
+          app.use("/api", routes(models));
      })
      .catch(() => {
           console.log("🔴 No se pudo conectar a la base de datos");
