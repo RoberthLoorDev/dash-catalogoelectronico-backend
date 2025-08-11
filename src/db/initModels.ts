@@ -14,34 +14,34 @@ import { defineParticipacionModel } from "../models/participacion.model";
 import { defineSesionModel } from "../models/sesion.model";
 
 export function initModels(sequelize: Sequelize) {
-     const Usuario = defineUsuarioModel(sequelize);
-     const Rol = defineRolModel(sequelize);
-     const Accion = defineAccionModel(sequelize);
-     const Incidencia = defineIncidenciaModel(sequelize);
-     const Notificacion = defineNotificacionModel(sequelize);
-     const Categoria = defineCategoriaModel(sequelize);
-     const Entidad = defineEntidadModel(sequelize);
-     const Marca = defineMarcaModel(sequelize);
-     const Proveedor = defineProveedorModel(sequelize);
-     const Tipo = defineTipoModel(sequelize);
-     const Orden = defineOrdenModel(sequelize);
-     const Participacion = defineParticipacionModel(sequelize);
-     const Sesion = defineSesionModel(sequelize);
+     const UsuarioModel = defineUsuarioModel(sequelize);
+     const RolModel = defineRolModel(sequelize);
+     const AccionModel = defineAccionModel(sequelize);
+     const IncidenciaModel = defineIncidenciaModel(sequelize);
+     const NotificacionModel = defineNotificacionModel(sequelize);
+     const CategoriaModel = defineCategoriaModel(sequelize);
+     const EntidadModel = defineEntidadModel(sequelize);
+     const MarcaModel = defineMarcaModel(sequelize);
+     const ProveedorModel = defineProveedorModel(sequelize);
+     const TipoModel = defineTipoModel(sequelize);
+     const OrdenModel = defineOrdenModel(sequelize);
+     const ParticipacionModel = defineParticipacionModel(sequelize);
+     const SesionModel = defineSesionModel(sequelize);
 
      return {
-          Usuario,
-          Rol,
-          Accion,
-          Incidencia,
-          Notificacion,
-          Categoria,
-          Entidad,
-          Marca,
-          Proveedor,
-          Tipo,
-          Orden,
-          Participacion,
-          Sesion,
+          UsuarioModel,
+          RolModel,
+          AccionModel,
+          IncidenciaModel,
+          NotificacionModel,
+          CategoriaModel,
+          EntidadModel,
+          MarcaModel,
+          ProveedorModel,
+          TipoModel,
+          OrdenModel,
+          ParticipacionModel,
+          SesionModel,
      };
 }
 
