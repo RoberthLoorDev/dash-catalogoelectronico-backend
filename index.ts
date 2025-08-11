@@ -1,5 +1,6 @@
 import express from "express";
 import "dotenv/config";
+import { connectDB } from "./src/db";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -18,6 +19,14 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
      const status = err?.status || 500;
      res.status(status).json({ error: err?.message || "Unexpected error" });
 });
+
+connectDB()
+     .then(() => {
+          console.log("🟢 Base de datos conectada correctamente");
+     })
+     .catch(() => {
+          console.log("🔴 No se pudo conectar a la base de datos");
+     });
 
 app.listen(PORT, () => {
      console.log(`API escuchando en http://localhost:${PORT}`);
