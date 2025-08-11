@@ -1,0 +1,32 @@
+{
+     "name": "dash-catalogoelectronico-frontend",
+     "version": "1.0.0",
+     "main": "index.js",
+     "scripts": {
+          "dev": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=.env.development nodemon --watch \"src/**/*.ts\" --exec \"ts-node -r dotenv/config\" src/index.ts",
+          "staging": "cross-env NODE_ENV=staging DOTENV_CONFIG_PATH=.env.staging nodemon --watch \"src/**/*.ts\" --exec \"ts-node -r dotenv/config\" src/index.ts",
+          "build": "tsc",
+          "start": "npm run build && cross-env NODE_ENV=production DOTENV_CONFIG_PATH=.env.production node -r dotenv/config dist/index.js",
+          "production": "npm run build && cross-env NODE_ENV=production DOTENV_CONFIG_PATH=.env.production node -r dotenv/config dist/index.js",
+          "typecheck": "tsc --noEmit",
+          "check": "tsc --noEmit"
+     },
+     "keywords": [],
+     "author": "",
+     "license": "ISC",
+     "description": "",
+     "dependencies": {
+          "dotenv": "^17.2.1",
+          "express": "^5.1.0",
+          "ts-node": "^10.9.2"
+     },
+     "devDependencies": {
+          "@types/express": "^5.0.3",
+          "@types/node": "^24.2.1",
+          "cross-env": "^7.0.3",
+          "dotenv-cli": "^7.0.0",
+          "nodemon": "^3.1.10",
+          "tsx": "^4.20.3",
+          "typescript": "^5.9.2"
+     }
+}

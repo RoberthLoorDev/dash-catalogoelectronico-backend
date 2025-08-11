@@ -1,0 +1,29 @@
+# Node.js
+node_modules/
+
+# Compilados TypeScript
+/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Entornos
+.env
+.env.development
+.env.production
+.env.staging
+
+# VSCode
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Otros
+coverage/
+*.tgz
+.idea/
+*.swp
