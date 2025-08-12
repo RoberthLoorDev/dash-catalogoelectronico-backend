@@ -62,8 +62,9 @@ export const defineOrdenModel = (sequelize: Sequelize) => {
                precio_segundo: { type: DataTypes.DECIMAL(14, 2), allowNull: true },
                created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
                updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
           },
-          { tableName: "ordenes", timestamps: true, createdAt: "created_at", updatedAt: "updated_at" }
+          { tableName: "ordenes", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", deletedAt: "delete_at" }
      ) as ModelDefined<OrdenAttrs, OrdenCreationAttrs>;
      return Orden;
 };

@@ -29,8 +29,17 @@ export const defineAccionModel = (sequelize: Sequelize) => {
                titulo: { type: DataTypes.STRING(191), allowNull: true },
                external_id: { type: DataTypes.STRING(191), allowNull: true },
                datos_anteriores: { type: DataTypes.JSON, allowNull: true },
+               created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
           },
-          { tableName: "acciones", timestamps: false }
+          {
+               tableName: "acciones",
+               timestamps: true,
+               createdAt: "created_at",
+               updatedAt: "updated_at",
+               deletedAt: "delete_at",
+          }
      ) as ModelDefined<AccionAttrs, AccionCreationAttrs>;
      return Accion;
 };

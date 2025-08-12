@@ -20,10 +20,15 @@ export const defineParticipacionModel = (sequelize: Sequelize) => {
                precio_ofertado: { type: DataTypes.DECIMAL(14, 2), allowNull: false },
                fecha_oferta: { type: DataTypes.DATE, allowNull: true },
                created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
           },
           {
                tableName: "participaciones",
-               timestamps: false,
+               timestamps: true,
+               createdAt: "created_at",
+               updatedAt: "updated_at",
+               deletedAt: "delete_at",
                indexes: [{ name: "uniq_orden_proveedor", unique: true, fields: ["orden_id", "proveedor_id"] }],
           }
      ) as ModelDefined<ParticipacionAttrs, ParticipacionCreationAttrs>;

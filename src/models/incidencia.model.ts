@@ -27,8 +27,17 @@ export const defineIncidenciaModel = (sequelize: Sequelize) => {
                estado: { type: DataTypes.STRING(50), allowNull: false, defaultValue: "abierto" },
                prioridad: { type: DataTypes.STRING(50), allowNull: false, defaultValue: "media" },
                external_id: { type: DataTypes.STRING(191), allowNull: true },
+               created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
           },
-          { tableName: "incidencias", timestamps: false }
+          {
+               tableName: "incidencias",
+               timestamps: true,
+               createdAt: "created_at",
+               updatedAt: "updated_at",
+               deletedAt: "delete_at",
+          }
      ) as ModelDefined<IncidenciaAttrs, IncidenciaCreationAttrs>;
      return Incidencia;
 };

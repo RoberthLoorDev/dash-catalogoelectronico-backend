@@ -21,11 +21,19 @@ export const defineNotificacionModel = (sequelize: Sequelize) => {
                mensaje: { type: DataTypes.TEXT, allowNull: false },
                leido: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
                created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
                titulo: { type: DataTypes.STRING(191), allowNull: false },
                tipo: { type: DataTypes.STRING(100), allowNull: false },
                enlace: { type: DataTypes.STRING(191), allowNull: true },
           },
-          { tableName: "notificaciones", timestamps: false }
+          {
+               tableName: "notificaciones",
+               timestamps: true,
+               createdAt: "created_at",
+               updatedAt: "updated_at",
+               deletedAt: "delete_at",
+          }
      ) as ModelDefined<NotificacionAttrs, NotificacionCreationAttrs>;
      return Notificacion;
 };

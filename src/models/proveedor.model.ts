@@ -12,8 +12,11 @@ export const defineProveedorModel = (sequelize: Sequelize) => {
           {
                id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true, allowNull: false },
                nombre: { type: DataTypes.STRING(191), allowNull: false, unique: true },
+               created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+               delete_at: { type: DataTypes.DATE, allowNull: true },
           },
-          { tableName: "proveedores", timestamps: false }
+          { tableName: "proveedores", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", deletedAt: "delete_at" }
      ) as ModelDefined<ProveedorAttrs, ProveedorCreationAttrs>;
      return Proveedor;
 };
