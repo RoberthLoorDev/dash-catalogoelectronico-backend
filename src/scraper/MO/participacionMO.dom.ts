@@ -1,13 +1,20 @@
 import { Page } from "puppeteer";
+import { toSqlDateTime, toFloatPrice } from "./normalize.utils";
 import { HistRow, Participation } from "./types";
 
 /** Extrae filas visibles del tbody actual (#body_table_listas) */
 export async function extractRowsFromDOM(page: Page): Promise<HistRow[]> {
-     return page.$$eval("#body_table_listas tr", (trs) => {
-          const out: HistRow[] = [];
+     // 1) Solo extrae strings en el contexto del navegador (sin usar utils)
+     const rawRows = await page.$$eval("#body_table_listas tr", (trs) => {
+          const out: Array<{
+               producto_raw: string;
+               cantidad: number | null;
+               fecha_hist: string; // crudo
+          }> = [];
+
           trs.forEach((tr) => {
                const tds = tr.querySelectorAll("td");
-               if (tds.length < 3) return; // evita filas de "No hay ninguna participación"
+               if (tds.length < 3) return;
 
                const td0 = tds[0].cloneNode(true) as HTMLElement;
                td0.querySelectorAll(".pull-right").forEach((el) => el.remove());
@@ -15,17 +22,28 @@ export async function extractRowsFromDOM(page: Page): Promise<HistRow[]> {
 
                const cantidadTxt = (tds[1].textContent || "").trim();
                const cantidadNum = parseInt(cantidadTxt, 10);
-               const fecha_hist = (tds[2].textContent || "").trim();
+
+               const fechaTxt = (tds[2].textContent || "").trim(); // <-- sin normalizar
 
                out.push({
                     producto_raw: producto,
                     cantidad: Number.isNaN(cantidadNum) ? null : cantidadNum,
-                    fecha_hist,
-                    categoria_id: null,
+                    fecha_hist: fechaTxt, // crudo
                });
           });
+
           return out;
      });
+
+     // 2) Ya en Node, normaliza la fecha
+     const rows: HistRow[] = rawRows.map((r) => ({
+          producto_raw: r.producto_raw,
+          cantidad: r.cantidad,
+          fecha_hist: toSqlDateTime(r.fecha_hist) ?? r.fecha_hist,
+          categoria_id: null,
+     }));
+
+     return rows;
 }
 
 /** Lee el número máximo de página del paginador bajo la tabla */
@@ -150,10 +168,7 @@ export async function extractParticipationsForRow(page: Page, rowIndex: number):
           rowIndex
      );
 
-     if (!href) {
-          // No hay link en esta fila
-          return [];
-     }
+     if (!href) return [];
 
      // 2) Espera la respuesta Ajax que carga el modal
      const respWait = page
@@ -181,16 +196,17 @@ export async function extractParticipationsForRow(page: Page, rowIndex: number):
           .catch(() => {});
      await page.waitForSelector("#resultados .modal-content table tbody", { timeout: 10000 });
 
-     // 5) Extraer las filas de datos (>=3 celdas). Saltar la segunda (idx 1).
-     const parts = await page.$$eval("#resultados .modal-content table tbody tr", (trs) => {
+     // 5) Extraer strings crudos (y saltar la segunda fila del modal)
+     const rawRows = await page.$$eval("#resultados .modal-content table tbody tr", (trs) => {
           const dataRows = (trs as Element[]).filter((tr) => tr.querySelectorAll("td").length >= 3);
           const picked = dataRows.filter((_r, idx) => idx !== 1); // omite la segunda fila
+
           return picked.map((tr) => {
                const tds = tr.querySelectorAll("td");
-               const precio = (tds[0].textContent || "").replace(/\s+/g, " ").trim();
+               const precioRaw = (tds[0].textContent || "").replace(/\s+/g, " ").trim(); // "$ 1.569,00 ..."
                const proveedor = (tds[1].textContent || "").replace(/\s+/g, " ").trim();
-               const fecha = (tds[2].textContent || "").replace(/\s+/g, " ").trim();
-               return { orden_id: null, proveedor_id: proveedor, precio_ofertado: precio, fecha_oferta: fecha };
+               const fechaRaw = (tds[2].textContent || "").replace(/\s+/g, " ").trim(); // "28-02-2025 14:13:31"
+               return { proveedor, precioRaw, fechaRaw };
           });
      });
 
@@ -209,5 +225,10 @@ export async function extractParticipationsForRow(page: Page, rowIndex: number):
           })
           .catch(() => {});
 
-     return parts as Participation[];
+     return rawRows.map((r) => ({
+          orden_id: null,
+          proveedor_id: r.proveedor,
+          precio_ofertado: toFloatPrice(r.precioRaw) ?? 0,
+          fecha_oferta: toSqlDateTime(r.fechaRaw) ?? r.fechaRaw,
+     }));
 }

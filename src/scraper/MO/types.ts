@@ -19,6 +19,6 @@ export type CheckMOResult = {
 export type Participation = {
      orden_id: number | null;
      proveedor_id: string;
-     precio_ofertado: string;
+     precio_ofertado: number;
      fecha_oferta: string; // "YYYY-MM-DD HH:mm:ss"
 };
