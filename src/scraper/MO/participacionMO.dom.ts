@@ -1,5 +1,6 @@
 import { Page } from "puppeteer";
 import { HistRow } from "./types";
+import { computeCategoriaId } from "./category.utils";
 
 /** Extrae filas visibles del tbody actual (#body_table_listas) */
 export async function extractRowsFromDOM(page: Page): Promise<HistRow[]> {
@@ -21,6 +22,7 @@ export async function extractRowsFromDOM(page: Page): Promise<HistRow[]> {
                     producto_raw: producto,
                     cantidad: Number.isNaN(cantidadNum) ? null : cantidadNum,
                     fecha_hist,
+                    categoria_id: null,
                });
           });
           return out;

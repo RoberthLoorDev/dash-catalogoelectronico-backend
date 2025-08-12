@@ -5,6 +5,7 @@ export type HistRow = {
      producto_raw: string;
      cantidad: number | null;
      fecha_hist: string;
+     categoria_id: number | null;
 };
 
 export type CheckMOResult = {

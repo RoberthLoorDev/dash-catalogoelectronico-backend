@@ -4,6 +4,7 @@ import { doLogin, gotoAndMaybeAcceptCookies, launchBrowser, needsLogin, newPage 
 import { toMonthValue, toNumStr } from "./date-utils";
 import { extractRowsFromDOM, getMaxPageFromDOM, ensureResultsLoaded, goToPageAndWait } from "./participacionMO.dom";
 import { CheckMOResult, RangeParams, HistRow } from "./types";
+import { computeCategoriaId } from "./category.utils";
 
 const TARGET = "https://catalogoelectronico.compraspublicas.gob.ec/pendientes/participacion/MO";
 
@@ -120,6 +121,7 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
 
           // Filas de la página 1
           let allRows: HistRow[] = await extractRowsFromDOM(page);
+          allRows = allRows.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) })); // <--- Aquí se asigna la categoría
 
           // Paginación: páginas 2..N
           const maxPage = await getMaxPageFromDOM(page);
@@ -127,7 +129,8 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
                console.log(`➡️ Cargando página ${p} de ${maxPage}…`);
                await goToPageAndWait(page, p);
                const rowsPage = await extractRowsFromDOM(page);
-               allRows = allRows.concat(rowsPage);
+               const rowsPageWithCat = rowsPage.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) })); // <--- Aquí se asigna la categoría
+               allRows = allRows.concat(rowsPageWithCat);
           }
 
           if (tableHtml) {
