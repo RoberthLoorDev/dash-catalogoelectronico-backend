@@ -6,6 +6,7 @@ export type HistRow = {
      cantidad: number | null;
      fecha_hist: string;
      categoria_id: number | null;
+     participaciones?: Participation[];
 };
 
 export type CheckMOResult = {
@@ -13,4 +14,11 @@ export type CheckMOResult = {
      reason?: string;
      table?: string;
      rows?: HistRow[];
+};
+
+export type Participation = {
+     orden_id: number | null;
+     proveedor_id: string;
+     precio_ofertado: string;
+     fecha_oferta: string; // "YYYY-MM-DD HH:mm:ss"
 };

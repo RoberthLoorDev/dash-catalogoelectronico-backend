@@ -2,9 +2,16 @@ import { Browser } from "puppeteer";
 import { dbConfig } from "../../config";
 import { doLogin, gotoAndMaybeAcceptCookies, launchBrowser, needsLogin, newPage } from "./navigation.service";
 import { toMonthValue, toNumStr } from "./date-utils";
-import { extractRowsFromDOM, getMaxPageFromDOM, ensureResultsLoaded, goToPageAndWait } from "./participacionMO.dom";
+import {
+     extractRowsFromDOM,
+     getMaxPageFromDOM,
+     ensureResultsLoaded,
+     goToPageAndWait,
+     extractParticipationsForRow,
+} from "./participacionMO.dom";
 import { CheckMOResult, RangeParams, HistRow } from "./types";
 import { computeCategoriaId } from "./category.utils";
+import { openFirstDetailModalAndCheck } from "./participacionMO.dom";
 
 const TARGET = "https://catalogoelectronico.compraspublicas.gob.ec/pendientes/participacion/MO";
 
@@ -121,7 +128,16 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
 
           // Filas de la página 1
           let allRows: HistRow[] = await extractRowsFromDOM(page);
-          allRows = allRows.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) })); // <--- Aquí se asigna la categoría
+          allRows = allRows.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) }));
+
+          // por cada fila visible, abre el modal y agrega participaciones
+          for (let i = 0; i < allRows.length; i++) {
+               try {
+                    allRows[i].participaciones = await extractParticipationsForRow(page, i);
+               } catch {
+                    allRows[i].participaciones = [];
+               }
+          }
 
           // Paginación: páginas 2..N
           const maxPage = await getMaxPageFromDOM(page);
@@ -130,6 +146,16 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
                await goToPageAndWait(page, p);
                const rowsPage = await extractRowsFromDOM(page);
                const rowsPageWithCat = rowsPage.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) })); // <--- Aquí se asigna la categoría
+
+               // modal por fila también en páginas siguientes
+               for (let i = 0; i < rowsPageWithCat.length; i++) {
+                    try {
+                         rowsPageWithCat[i].participaciones = await extractParticipationsForRow(page, i);
+                    } catch {
+                         rowsPageWithCat[i].participaciones = [];
+                    }
+               }
+
                allRows = allRows.concat(rowsPageWithCat);
           }
 

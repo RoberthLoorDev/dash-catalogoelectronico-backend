@@ -1,6 +1,5 @@
 import { Page } from "puppeteer";
-import { HistRow } from "./types";
-import { computeCategoriaId } from "./category.utils";
+import { HistRow, Participation } from "./types";
 
 /** Extrae filas visibles del tbody actual (#body_table_listas) */
 export async function extractRowsFromDOM(page: Page): Promise<HistRow[]> {
@@ -75,4 +74,140 @@ export async function goToPageAndWait(page: Page, pageNum: number): Promise<void
      );
 
      await ensureResultsLoaded(page);
+}
+
+// Abre el primer "Ver resultados" y valida que el modal contenga <h4>Historial de las ofertas</h4>
+export async function openFirstDetailModalAndCheck(page: Page): Promise<boolean> {
+     // Asegura que exista al menos un link de detalle
+     await page.waitForSelector('#body_table_listas a[href*="/pendientes/participacion/ver/"]', { timeout: 15000 });
+
+     // Click en el primer link y espera la respuesta AJAX que carga el modal
+     const respWait = page
+          .waitForResponse((r) => r.url().includes("/pendientes/participacion/ver/") && r.status() === 200, { timeout: 15000 })
+          .catch(() => null);
+
+     await page.click('#body_table_listas a[href*="/pendientes/participacion/ver/"]');
+     await respWait;
+
+     // Espera a que el modal esté visible y con contenido
+     await page
+          .waitForSelector('#resultados.in, #resultados.show, #resultados[aria-hidden="false"]', { timeout: 10000 })
+          .catch(() => {});
+
+     // Verifica el H4
+     const found = await page
+          .waitForFunction(
+               () => {
+                    const h = document.querySelector("#resultados .modal-content h4");
+                    if (!h) return false;
+                    const t = (h.textContent || "")
+                         .normalize("NFD")
+                         .replace(/\p{Diacritic}/gu, "")
+                         .toLowerCase()
+                         .trim();
+                    return t.includes("historial de las ofertas");
+               },
+               { timeout: 10000 }
+          )
+          .then(() => true)
+          .catch(() => false);
+
+     // Cierra el modal (botón de cierre o via jQuery si está disponible)
+     await page
+          .evaluate(() => {
+               const btn = document.querySelector(
+                    '#resultados [data-dismiss="modal"], #resultados .modal-header .close'
+               ) as HTMLElement | null;
+               if (btn) {
+                    btn.click();
+               } else if ((window as any).$) {
+                    (window as any)("#resultados").modal("hide");
+               } else {
+                    const m = document.getElementById("resultados");
+                    if (m) m.classList.remove("in", "show");
+               }
+          })
+          .catch(() => {});
+
+     return found;
+}
+
+/**
+ * Abre el modal "Ver resultados" de la fila de datos #rowIndex (0-based) y
+ * devuelve sus participaciones. Omite la segunda fila de datos del modal.
+ */
+export async function extractParticipationsForRow(page: Page, rowIndex: number): Promise<Participation[]> {
+     // 1) Obtener el href del link dentro de la fila de datos N
+     const href = await page.$$eval(
+          "#body_table_listas tr",
+          (trs, idx) => {
+               const dataRows = (trs as Element[]).filter((tr) => tr.querySelectorAll("td").length >= 3);
+               const tr = dataRows[idx as number];
+               if (!tr) return null;
+               const a = tr.querySelector('a[href*="/pendientes/participacion/ver/"]') as HTMLAnchorElement | null;
+               return a?.getAttribute("href") || null;
+          },
+          rowIndex
+     );
+
+     if (!href) {
+          // No hay link en esta fila
+          return [];
+     }
+
+     // 2) Espera la respuesta Ajax que carga el modal
+     const respWait = page
+          .waitForResponse((r) => r.url().includes(href) && r.status() === 200, { timeout: 15000 })
+          .catch(() => null);
+
+     // 3) Click al link del modal dentro de esa fila
+     await page.$$eval(
+          "#body_table_listas tr",
+          (trs, idx) => {
+               const dataRows = (trs as Element[]).filter((tr) => tr.querySelectorAll("td").length >= 3);
+               const tr = dataRows[idx as number] as HTMLElement | undefined;
+               if (!tr) return;
+               const a = tr.querySelector('a[href*="/pendientes/participacion/ver/"]') as HTMLAnchorElement | null;
+               if (a) (a as any).click();
+          },
+          rowIndex
+     );
+
+     await respWait;
+
+     // 4) Esperar a que el modal esté visible y con la tabla cargada
+     await page
+          .waitForSelector('#resultados.in, #resultados.show, #resultados[aria-hidden="false"]', { timeout: 10000 })
+          .catch(() => {});
+     await page.waitForSelector("#resultados .modal-content table tbody", { timeout: 10000 });
+
+     // 5) Extraer las filas de datos (>=3 celdas). Saltar la segunda (idx 1).
+     const parts = await page.$$eval("#resultados .modal-content table tbody tr", (trs) => {
+          const dataRows = (trs as Element[]).filter((tr) => tr.querySelectorAll("td").length >= 3);
+          const picked = dataRows.filter((_r, idx) => idx !== 1); // omite la segunda fila
+          return picked.map((tr) => {
+               const tds = tr.querySelectorAll("td");
+               const precio = (tds[0].textContent || "").replace(/\s+/g, " ").trim();
+               const proveedor = (tds[1].textContent || "").replace(/\s+/g, " ").trim();
+               const fecha = (tds[2].textContent || "").replace(/\s+/g, " ").trim();
+               return { orden_id: null, proveedor_id: proveedor, precio_ofertado: precio, fecha_oferta: fecha };
+          });
+     });
+
+     // 6) Cerrar el modal
+     await page
+          .evaluate(() => {
+               const btn = document.querySelector(
+                    '#resultados [data-dismiss="modal"], #resultados .modal-header .close'
+               ) as HTMLElement | null;
+               if (btn) btn.click();
+               else if ((window as any).$) (window as any)("#resultados").modal("hide");
+               else {
+                    const m = document.getElementById("resultados");
+                    if (m) m.classList.remove("in", "show");
+               }
+          })
+          .catch(() => {});
+
+     return parts as Participation[];
 }
