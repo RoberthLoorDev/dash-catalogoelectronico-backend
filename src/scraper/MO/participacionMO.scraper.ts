@@ -8,6 +8,7 @@ import {
      ensureResultsLoaded,
      goToPageAndWait,
      extractParticipationsForRow,
+     getTipoIdFromHeading,
 } from "./participacionMO.dom";
 import { CheckMOResult, RangeParams, HistRow } from "./types";
 import { computeCategoriaId } from "./category.utils";
@@ -118,6 +119,9 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
           // Esperar resultados reales
           await ensureResultsLoaded(page);
 
+          // Obtener tipo_id del encabezado
+          const tipoId = await getTipoIdFromHeading(page);
+
           // Tabla HTML de página 1
           const tableHtml: string | null = await page
                .$eval("#body_table_listas", (tbody: HTMLElement) => {
@@ -128,7 +132,7 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
 
           // Filas de la página 1
           let allRows: HistRow[] = await extractRowsFromDOM(page);
-          allRows = allRows.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) }));
+          allRows = allRows.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw), tipo_id: tipoId }));
 
           // por cada fila visible, abre el modal y agrega participaciones
           for (let i = 0; i < allRows.length; i++) {
@@ -145,7 +149,11 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
                console.log(`➡️ Cargando página ${p} de ${maxPage}…`);
                await goToPageAndWait(page, p);
                const rowsPage = await extractRowsFromDOM(page);
-               const rowsPageWithCat = rowsPage.map((r) => ({ ...r, categoria_id: computeCategoriaId(r.producto_raw) })); // <--- Aquí se asigna la categoría
+               const rowsPageWithCat = rowsPage.map((r) => ({
+                    ...r,
+                    categoria_id: computeCategoriaId(r.producto_raw),
+                    tipo_id: tipoId,
+               })); // <--- Aquí se asigna la categoría y el id del tipo
 
                // modal por fila también en páginas siguientes
                for (let i = 0; i < rowsPageWithCat.length; i++) {

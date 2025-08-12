@@ -6,6 +6,7 @@ export type HistRow = {
      cantidad: number | null;
      fecha_hist: string;
      categoria_id: number | null;
+     tipo_id?: number;
      participaciones?: Participation[];
 };
 
@@ -13,6 +14,7 @@ export type CheckMOResult = {
      ok: boolean;
      reason?: string;
      table?: string;
+
      rows?: HistRow[];
 };
 

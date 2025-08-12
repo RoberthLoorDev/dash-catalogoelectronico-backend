@@ -232,3 +232,24 @@ export async function extractParticipationsForRow(page: Page, rowIndex: number):
           fecha_oferta: toSqlDateTime(r.fechaRaw) ?? r.fechaRaw,
      }));
 }
+
+/** Lee el encabezado del panel y devuelve el tipo_id:
+ *  1 = "Órdenes de mejor oferta"
+ *  2 = "Órdenes de gran compra (mejor oferta)"
+ *  3 = "Órdenes de gran compra (Puja)"
+ */
+export async function getTipoIdFromHeading(page: Page): Promise<number> {
+     const raw = await page.$eval("#tabla_gcmo .panel-heading", (el) => el.textContent || "").catch(() => "");
+
+     const t = raw
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/\p{Diacritic}/gu, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+     if (t.includes("gran compra") && t.includes("puja")) return 3; // Gran Compra Puja
+     if (t.includes("gran compra") && t.includes("mejor oferta")) return 2; // Gran Compra Mejor Oferta
+     if (t.includes("mejor oferta")) return 1; // Mejor Oferta
+     return 1;
+}
