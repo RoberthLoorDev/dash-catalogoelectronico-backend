@@ -13,6 +13,9 @@ import {
 import { CheckMOResult, RangeParams, HistRow } from "./types";
 import { computeCategoriaId } from "./category.utils";
 import { openFirstDetailModalAndCheck } from "./participacionMO.dom";
+import { initModels } from "../../db/initModels";
+import { persistMOResults } from "./mo_persist.service";
+import sequelize from "../../db";
 
 const TARGET = "https://catalogoelectronico.compraspublicas.gob.ec/pendientes/participacion/MO";
 
@@ -169,6 +172,12 @@ export async function checkParticipacionMO(range?: RangeParams): Promise<CheckMO
 
           if (tableHtml) {
                console.log(`🎯 ÉXITO: Tabla encontrada. Filas totales: ${allRows.length}`);
+
+               // Persistir en BD
+               const models = initModels(sequelize);
+               const persist = await persistMOResults(sequelize, models, allRows);
+               console.log(`💾 Persistencia OK. Órdenes creadas: ${persist.created}, actualizadas: ${persist.updated}`);
+
                return { ok: true, table: tableHtml, rows: allRows };
           }
 

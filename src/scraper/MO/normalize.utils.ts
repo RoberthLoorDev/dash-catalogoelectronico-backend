@@ -46,3 +46,12 @@ export function toFloatPrice(s: string): number | null {
      const n = parseFloat(x);
      return Number.isFinite(n) ? n : null;
 }
+
+export function normalizeProductName(s: string): string {
+     return (s || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/\p{Diacritic}/gu, "")
+          .replace(/\s+/g, " ")
+          .trim();
+}
