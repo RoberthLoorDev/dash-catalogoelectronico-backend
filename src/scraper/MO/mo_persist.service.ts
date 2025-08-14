@@ -1,7 +1,7 @@
 import { Sequelize, Transaction, ModelDefined } from "sequelize";
 import { Models } from "../../db/initModels";
 import { HistRow, Participation } from "../../scraper/MO/types";
-import { normalizeProductName } from "../../scraper/MO/normalize.utils";
+import { addHoursToSqlDateTime, normalizeProductName } from "../../scraper/MO/normalize.utils";
 
 // Cache en memoria para minimizar lecturas de proveedor
 const provCache = new Map<string, number>();
@@ -53,7 +53,7 @@ async function upsertOrden(models: Models, row: HistRow, tx: Transaction) {
 
      const producto_norm = normalizeProductName(row.producto_raw);
      // Si no te dan fecha_cierre, usamos fecha_hist como fallback para cumplir el NOT NULL
-     const fecha_cierre = row.fecha_hist;
+     const fecha_cierre = addHoursToSqlDateTime(row.fecha_hist, 24) ?? row.fecha_hist;
 
      // Payload base (las que no tienes quedan null)
      const basePayload: any = {

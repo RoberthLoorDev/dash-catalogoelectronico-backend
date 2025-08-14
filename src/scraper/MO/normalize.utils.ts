@@ -55,3 +55,25 @@ export function normalizeProductName(s: string): string {
           .replace(/\s+/g, " ")
           .trim();
 }
+
+export function addHoursToSqlDateTime(sql: string, hours: number): string | null {
+     // Espera "YYYY-MM-DD HH:mm:ss"
+     const m = sql.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/);
+     if (!m) return null;
+
+     const [_, y, mo, d, h, mi, s] = m.map(Number);
+     // trabajamos en UTC para evitar líos de TZ/DST
+     const t0 = Date.UTC(y, mo - 1, d, h, mi, s);
+     const t1 = t0 + hours * 3600_000;
+     const dt = new Date(t1);
+
+     const pad2 = (n: number) => String(n).padStart(2, "0");
+     const yyyy = dt.getUTCFullYear();
+     const mm = pad2(dt.getUTCMonth() + 1);
+     const dd = pad2(dt.getUTCDate());
+     const HH = pad2(dt.getUTCHours());
+     const MM = pad2(dt.getUTCMinutes());
+     const SS = pad2(dt.getUTCSeconds());
+
+     return `${yyyy}-${mm}-${dd} ${HH}:${MM}:${SS}`;
+}
